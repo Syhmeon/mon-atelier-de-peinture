@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Atelier de Peinture</title>
+  <style>
+    /* === RESET & BASE === */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive;
+      background: linear-gradient(135deg, #fce4ec, #e8f5e9, #e3f2fd, #fff9c4);
+      background-size: 400% 400%;
+      animation: bgMove 12s ease infinite;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Animation douce du fond */
+    @keyframes bgMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* === TITRE === */
+    .title {
+      font-size: 2.6rem;
+      color: #e91e63;
+      text-shadow: 2px 2px 0 #fff, 3px 3px 0 rgba(0,0,0,0.08);
+      margin: 12px 0 6px 0;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #7c4dff;
+      margin-bottom: 8px;
+    }
+
+    /* === BARRE D'OUTILS === */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+      max-width: 95vw;
+    }
+
+    /* Section dans la barre */
+    .tool-section {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-section-label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-right: 2px;
+    }
+
+    /* Separateur vertical */
+    .sep {
+      width: 2px;
+      height: 36px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 0 4px;
+    }
+
+    /* === BOUTONS COULEUR === */
+    .color-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .color-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .color-btn.active {
+      border-color: #333;
+      transform: scale(1.25);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.2), 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    /* === BOUTONS ACTION === */
+    .action-btn {
+      padding: 8px 18px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: bold;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .action-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Bouton taille */
+    .size-btn {
+      background: #42a5f5;
+    }
+    .size-btn.active {
+      background: #1565c0;
+      box-shadow: 0 0 0 3px rgba(21,101,192,0.3), 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Bouton gomme */
+    .eraser-btn {
+      background: #ff9800;
+    }
+    .eraser-btn.active {
+      background: #e65100;
+      box-shadow: 0 0 0 3px rgba(230,81,0,0.3), 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Bouton effacer tout */
+    .clear-btn {
+      background: #ef5350;
+    }
+
+    /* Bouton pinceau */
+    .brush-btn {
+      background: #66bb6a;
+    }
+    .brush-btn.active {
+      background: #2e7d32;
+      box-shadow: 0 0 0 3px rgba(46,125,50,0.3), 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    /* === ZONE DE DESSIN === */
+    .canvas-container {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      border: 4px solid #fff;
+      background: #fff;
+    }
+
+    canvas {
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* === CURSEUR PERSONNALISE === */
+    .cursor-preview {
+      position: fixed;
+      pointer-events: none;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.4);
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      display: none;
+      mix-blend-mode: multiply;
+    }
+
+    /* === DECORATION : confettis flottants === */
+    .deco {
+      position: fixed;
+      font-size: 1.8rem;
+      opacity: 0.3;
+      pointer-events: none;
+      animation: floatDeco 6s ease-in-out infinite;
+    }
+
+    @keyframes floatDeco {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-15px) rotate(10deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Titre -->
+  <h1 class="title">Mon Atelier de Peinture</h1>
+  <p class="subtitle">Choisis une couleur et dessine !</p>
+
+  <!-- Barre d'outils -->
+  <div class="toolbar">
+
+    <!-- Couleurs -->
+    <div class="tool-section" id="colors">
+      <!-- Les boutons couleur sont generes en JS -->
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Outils : pinceau & gomme -->
+    <div class="tool-section">
+      <button class="action-btn brush-btn active" id="brushBtn" onclick="selectBrush()">Pinceau</button>
+      <button class="action-btn eraser-btn" id="eraserBtn" onclick="selectEraser()">Gomme</button>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Tailles -->
+    <div class="tool-section">
+      <button class="action-btn size-btn" data-size="4" onclick="setSize(4, this)">Petit</button>
+      <button class="action-btn size-btn active" data-size="12" onclick="setSize(12, this)">Moyen</button>
+      <button class="action-btn size-btn" data-size="28" onclick="setSize(28, this)">Gros</button>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Effacer tout -->
+    <div class="tool-section">
+      <button class="action-btn clear-btn" onclick="clearCanvas()">Tout effacer</button>
+    </div>
+  </div>
+
+  <!-- Zone de dessin -->
+  <div class="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <!-- Apercu du curseur -->
+  <div class="cursor-preview" id="cursorPreview"></div>
+
+  <!-- Petites decorations -->
+  <span class="deco" style="top:8%; left:3%; animation-delay:0s;">&#9734;</span>
+  <span class="deco" style="top:20%; right:2%; animation-delay:1s;">&#9825;</span>
+  <span class="deco" style="bottom:10%; left:5%; animation-delay:2s;">&#9786;</span>
+  <span class="deco" style="bottom:5%; right:4%; animation-delay:3s;">&#9733;</span>
+
+  <script>
+    /* =============================================
+       CONFIGURATION
+       ============================================= */
+
+    // Palette de couleurs joyeuses
+    const COLORS = [
+      { name: 'Rouge',  hex: '#e53935' },
+      { name: 'Rose',   hex: '#ec407a' },
+      { name: 'Violet', hex: '#ab47bc' },
+      { name: 'Bleu',   hex: '#42a5f5' },
+      { name: 'Vert',   hex: '#66bb6a' },
+      { name: 'Jaune',  hex: '#ffee58' },
+      { name: 'Orange', hex: '#ffa726' },
+      { name: 'Marron', hex: '#8d6e63' },
+      { name: 'Noir',   hex: '#424242' },
+    ];
+
+    /* =============================================
+       INITIALISATION DU CANVAS
+       ============================================= */
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const cursorPreview = document.getElementById('cursorPreview');
+
+    // Dimensions du canvas adaptees a la fenetre
+    function resizeCanvas() {
+      const w = Math.min(window.innerWidth - 32, 1100);
+      const h = Math.min(window.innerHeight - 260, 600);
+      // Sauvegarder le dessin actuel
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      canvas.width = w;
+      canvas.height = Math.max(h, 300);
+      // Fond blanc
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Restaurer le dessin
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    /* =============================================
+       ETAT DU DESSIN
+       ============================================= */
+
+    let drawing = false;
+    let currentColor = COLORS[0].hex;
+    let brushSize = 12;
+    let isEraser = false;
+
+    /* =============================================
+       CREATION DES BOUTONS COULEUR
+       ============================================= */
+
+    const colorsContainer = document.getElementById('colors');
+
+    COLORS.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'color-btn' + (i === 0 ? ' active' : '');
+      btn.style.background = c.hex;
+      btn.title = c.name;
+      btn.setAttribute('aria-label', c.name);
+      btn.addEventListener('click', () => {
+        // Desactiver l'ancienne couleur
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentColor = c.hex;
+        // Repasser en mode pinceau automatiquement
+        if (isEraser) selectBrush();
+        updateCursorPreview();
+      });
+      colorsContainer.appendChild(btn);
+    });
+
+    /* =============================================
+       FONCTIONS DES OUTILS
+       ============================================= */
+
+    // Pinceau
+    function selectBrush() {
+      isEraser = false;
+      document.getElementById('brushBtn').classList.add('active');
+      document.getElementById('eraserBtn').classList.remove('active');
+      canvas.style.cursor = 'crosshair';
+      updateCursorPreview();
+    }
+
+    // Gomme
+    function selectEraser() {
+      isEraser = true;
+      document.getElementById('eraserBtn').classList.add('active');
+      document.getElementById('brushBtn').classList.remove('active');
+      canvas.style.cursor = 'crosshair';
+      updateCursorPreview();
+    }
+
+    // Taille du pinceau
+    function setSize(size, btn) {
+      brushSize = size;
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateCursorPreview();
+    }
+
+    // Effacer tout le dessin
+    function clearCanvas() {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /* =============================================
+       DESSIN SUR LE CANVAS
+       ============================================= */
+
+    // Obtenir les coordonnees dans le canvas (souris ou tactile)
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    // Commencer a dessiner
+    function startDraw(e) {
+      e.preventDefault();
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      // Dessiner un point meme pour un simple clic
+      drawDot(pos);
+    }
+
+    // Dessiner en mouvement
+    function moveDraw(e) {
+      e.preventDefault();
+      if (!drawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = isEraser ? '#ffffff' : currentColor;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    // Arreter de dessiner
+    function stopDraw(e) {
+      if (e) e.preventDefault();
+      drawing = false;
+      ctx.beginPath();
+    }
+
+    // Dessiner un point (pour le clic simple)
+    function drawDot(pos) {
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = isEraser ? '#ffffff' : currentColor;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    // Evenements souris
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', moveDraw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+
+    // Evenements tactiles (tablettes, telephones)
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', moveDraw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw, { passive: false });
+    canvas.addEventListener('touchcancel', stopDraw, { passive: false });
+
+    /* =============================================
+       APERCU DU CURSEUR
+       ============================================= */
+
+    function updateCursorPreview() {
+      cursorPreview.style.width = brushSize + 'px';
+      cursorPreview.style.height = brushSize + 'px';
+      cursorPreview.style.background = isEraser
+        ? 'rgba(255,255,255,0.6)'
+        : currentColor + '55'; // couleur semi-transparente
+    }
+
+    // Suivre la souris sur le canvas
+    canvas.addEventListener('mousemove', (e) => {
+      cursorPreview.style.display = 'block';
+      cursorPreview.style.left = e.clientX + 'px';
+      cursorPreview.style.top = e.clientY + 'px';
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      cursorPreview.style.display = 'none';
+    });
+
+    // Initialiser le curseur
+    updateCursorPreview();
+
+    // Fond blanc initial
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  </script>
+</body>
+</html>
